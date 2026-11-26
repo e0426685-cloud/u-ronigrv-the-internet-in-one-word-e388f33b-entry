@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """The Internet in One Word - make.fun bounty entry.
 
-Writes exactly one word to /output/entry.txt: my one-word verdict on
-the whole internet.
+Writes exactly one word to entry.txt: my one-word verdict on the whole
+internet. By default the file lands at /output/entry.txt; set the
+MAKEFUN_OUTPUT_DIR environment variable to point it somewhere else
+(for example when the grader runs with a different output directory).
 
 The word is "unhinged". It is funny as a verdict all by itself - the
 entire internet, billions of strangers shouting at once, summed up in a
@@ -29,7 +31,10 @@ import os
 
 WORD = "unhinged"
 
-OUTPUT_PATH = "/output/entry.txt"
+# Output directory: overridable through the environment, defaulting to
+# the standard /output the grader expects when nothing is set.
+OUTPUT_DIR = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+OUTPUT_PATH = os.path.join(OUTPUT_DIR, "entry.txt")
 
 # The gate allows 1 to 30 characters of UTF-8 text, not only white space.
 MAX_LENGTH = 30
@@ -40,12 +45,15 @@ def validate(word):
 
     The gate rejects anything that is not a single word: empty text,
     anything over 30 characters, non-letters, or any whitespace inside
-    the word. A lone word with no spaces passes all four checks.
+    the word. Letters must be plain ASCII: str.isalpha() alone would
+    also accept accented or non-Latin letters, so the check also
+    requires every character to be ASCII. A lone ASCII word with no
+    spaces passes all the checks.
     """
     if not word or len(word) > MAX_LENGTH:
         raise ValueError("entry must be 1 to 30 characters")
-    if not word.isalpha():
-        raise ValueError("entry must be exactly one word of letters")
+    if not word.isascii() or not word.isalpha():
+        raise ValueError("entry must be exactly one word of ASCII letters")
     if word.strip() != word or " " in word:
         raise ValueError("entry must be a single word with no spaces")
     return word
